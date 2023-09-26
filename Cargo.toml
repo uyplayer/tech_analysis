@@ -1,0 +1,19 @@
+[package]
+name = "tech_analysis"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+
+[lib]
+name = "tech_analysis"
+path = "src/lib.rs"
+
+[[bin]]
+name = "tech_analysis"
+path = "src/main.rs"
+
+[dependencies]
+polars = { version = "^0.32.1", features = ["lazy","describe"] }
+
