@@ -15,7 +15,8 @@ Welcome to the "Tech Analysis for Trading Strategy in Rust" repository! This rep
 
 Let's embark together on this exciting journey of exploring trading strategies sourced from the internet and TradingView, along with the associated technical analysis!
 
-## Strategy 策略
+## Usage
+### Strategy 策略
 1. [Lorentzian Classification](src/lorentzian_classification)
     - [tradingview](https://www.tradingview.com/script/WhBzgfDu-Machine-Learning-Lorentzian-Classification/)
 
