@@ -45,7 +45,11 @@ use std::time::Instant;
 /// use tech_analysis::rational_quadratic;
 /// let src = Series::new("data",vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 /// let result = rational_quadratic(&src, 2, 3.0, 1);
+<<<<<<< HEAD
 /// eprintln!("{:?}", result);
+=======
+/// println!("{:?}", result);
+>>>>>>> 7bd913aa997eb10ea4323728c10067cd3e028be8
 /// ```
 pub fn rational_quadratic(src:&Series, look_back: i32, relative_weight: f32, start_at_bar: i32) -> Result<Series,Box< dyn std::error::Error>> {
     let size = (start_at_bar + 2) as usize;
