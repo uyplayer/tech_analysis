@@ -1,6 +1,6 @@
 [package]
 name = "tech_analysis"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "technical analysis for crypto and stock"
 license = "MIT"
