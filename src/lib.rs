@@ -11,6 +11,10 @@
 
 
 
+// unsafe code not allowed
+#![forbid(unsafe_code)]
+
+
 //! this is a rust library implement various technical analysis for struck and cryptocurrency market
 
 

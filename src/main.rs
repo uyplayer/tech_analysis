@@ -10,8 +10,11 @@
  */
 
 
-use tech_analysis::{rational_quadratic,rational_quadratic_tv};
 
+// unsafe code not allowed
+#![forbid(unsafe_code)]
+
+use tech_analysis::{rational_quadratic,rational_quadratic_tv};
 
 
 fn main() {

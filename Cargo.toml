@@ -2,6 +2,10 @@
 name = "tech_analysis"
 version = "0.1.0"
 edition = "2021"
+description = "technical analysis for crypto and stock"
+license = "MIT"
+homepage = "https://github.com/uyplayer/tech_analysis"
+repository = "https://github.com/uyplayer/tech_analysis"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

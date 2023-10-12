@@ -9,13 +9,14 @@
  * @Description:
  */
 
-// unsafe code not allowed
-#![forbid(unsafe_code)]
+
 
 use polars::prelude::*;
 use polars::error::PolarsResult;
 use polars::frame::DataFrame;
 use polars::prelude::CsvReader;
+use std::time::Instant;
+
 
 // kernel functions calculate rational quadratic curve , gaussian curve
 
@@ -41,12 +42,12 @@ use polars::prelude::CsvReader;
 ///
 /// ```rust
 /// use polars::prelude::*;
-///
+/// use tech_analysis::rational_quadratic;
 /// let src = Series::new("data",vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-/// let result = rational_quadratic(src, 2, 3, 1);
-/// println!("{:?}", result);
+/// let result = rational_quadratic(&src, 2, 3.0, 1);
+/// eprintln!("{:?}", result);
 /// ```
-pub fn rational_quadratic(src:&Series, look_back: i32, relative_weight: f32, start_at_bar: i32) -> Series {
+pub fn rational_quadratic(src:&Series, look_back: i32, relative_weight: f32, start_at_bar: i32) -> Result<Series,Box< dyn std::error::Error>> {
     let size = (start_at_bar + 2) as usize;
     let num_windows = src.len() - size + 1;
     let windows:Vec<Series> = (0..num_windows)
@@ -64,18 +65,18 @@ pub fn rational_quadratic(src:&Series, look_back: i32, relative_weight: f32, sta
     let current_weight:Vec<f64> =(0..num_windows).map(|i| {
         let reversed_window = windows[i].reverse();
         let weighted_sum = reversed_window.multiply(&weight).unwrap();
-        weighted_sum.sum().unwrap()
+        weighted_sum.sum().expect("weighted_sum collection error")
     }).collect();
     let current_weight = Series::new("data",current_weight);
     let cumulative_weight:Vec<f64> =(0..num_windows).map(|_|{
-        weight.sum().unwrap()
+        weight.sum().expect("cumulative_weight collection error")
     }).collect();
     let cumulative_weight = Series::new("data",cumulative_weight);
-    let kernel_line = current_weight.divide(&cumulative_weight).unwrap();
+    let kernel_line = current_weight.divide(&cumulative_weight)?;
     let zero = vec![0.0;size-1];
     let mut previous = Series::new("data", zero);
-    let kernel_line = (*previous.extend(&kernel_line).unwrap()).clone().into();
-    kernel_line
+    let kernel_line = (*previous.extend(&kernel_line)?).clone().into();
+    Ok(kernel_line)
 }
 
 /// Calculates the rational quadratic value for a given set of parameters.
@@ -99,27 +100,28 @@ pub fn rational_quadratic(src:&Series, look_back: i32, relative_weight: f32, sta
 ///
 /// ```rust
 /// use polars::prelude::*;
-///
+/// use tech_analysis::rational_quadratic_tv;
 /// let src = Series::new("data",vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-/// let result = rational_quadratic_tv(src, 2, 3, 1);
+/// let result = rational_quadratic_tv(&src, 2, 3.0, 1);
 /// println!("{:?}", result);
 /// ```
-pub fn rational_quadratic_tv(src:&Series, look_back: i32, relative_weight: f32, start_at_bar: i32)->Series{
-    let mut val  = vec![0.0; src.len()];
+pub fn rational_quadratic_tv(src: &Series, look_back: i32, relative_weight: f32, start_at_bar: i32) -> Result<Series, Box<dyn std::error::Error>> {
+    let mut val = vec![0.0; src.len()];
+
     for bar_index in (start_at_bar + 1)..src.len() as i32 {
         let mut current_weight = 0.0;
         let mut cumulative_weight = 0.0;
 
         for i in 0..(start_at_bar + 2) {
-            let y: AnyValue = src.get((bar_index - i) as usize).unwrap();
+            let y: AnyValue = src.get((bar_index - i) as usize).expect("loop error");
             let w = (1.0 + (i.pow(2) as f64) / (look_back.pow(2) as f64 * 2.0 * relative_weight as f64)).powf(-relative_weight as f64);
-            current_weight += y.try_extract::<f64>().unwrap() * w;
+            current_weight += y.try_extract::<f64>().expect("casting error") * w;
             cumulative_weight += w;
         }
-        val[bar_index as usize] = current_weight / cumulative_weight
+        val[bar_index as usize] = current_weight / cumulative_weight;
     }
-    Series::new("data",val)
 
+    Ok(Series::new("data", val))
 }
 
 /// Performs a Gaussian operation.
@@ -130,7 +132,7 @@ fn gaussian() {
 
 // unit test
 #[cfg(test)]
-mod test{
+mod tests{
     use super::*;
     fn example() -> PolarsResult<DataFrame> {
         use std::env;
@@ -151,16 +153,22 @@ mod test{
         let binding = df.clone();
         // println!("{:?}", binding.describe(None));
         let close = binding.column("close").unwrap();
+        let start1 = Instant::now();
         let kernel_line = rational_quadratic(&close,8,1.0,25);
+        let duration = start1.elapsed();
+        println!("Time elapsed in expensive_function() is: {:?}", duration);
         let rational_quadratic = binding.column("rational_quadratic").unwrap();
         // Calculate the squared differences between predicted and actual values
-        let squared_errors = kernel_line.subtract(rational_quadratic).unwrap();
+        let squared_errors = kernel_line.unwrap().subtract(rational_quadratic).unwrap();
         let squared_errors = squared_errors.multiply(&squared_errors).unwrap();
         let mean_squared_error = squared_errors.slice(27,squared_errors.len()-27).sum_as_series()/(squared_errors.len()-27);
         println!("Mean Squared Error: {}", mean_squared_error);
+        let start2 = Instant::now();
         let kernel_line_tv = rational_quadratic_tv(&close,8,1.0,25);
+        let duration = start1.elapsed();
+        println!("Time elapsed in expensive_function() is: {:?}", duration);
         // Calculate the squared differences between predicted and actual values
-        let squared_errors = kernel_line_tv.subtract(rational_quadratic).unwrap();
+        let squared_errors = kernel_line_tv.unwrap().subtract(rational_quadratic).unwrap();
         let squared_errors = squared_errors.multiply(&squared_errors).unwrap();
         let mean_squared_error = squared_errors.slice(27,squared_errors.len()-27).sum_as_series()/(squared_errors.len()-27);
         println!("Mean Squared Error: {}", mean_squared_error);
