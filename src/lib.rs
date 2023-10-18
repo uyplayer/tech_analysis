@@ -19,5 +19,5 @@
 
 
 mod lorentzian_classification;
-pub use lorentzian_classification::{rational_quadratic,rational_quadratic_tv};
+pub use lorentzian_classification::{rational_quadratic,rational_quadratic_tv,gaussian,gaussian_tv};
 

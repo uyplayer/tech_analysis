@@ -11,6 +11,6 @@
 
 
 mod kernel;
-pub use kernel::{rational_quadratic,rational_quadratic_tv};
+pub use kernel::{rational_quadratic,rational_quadratic_tv,gaussian,gaussian_tv};
 mod helper;
 
