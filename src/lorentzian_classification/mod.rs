@@ -11,6 +11,17 @@
 
 
 mod kernel;
-pub use kernel::{rational_quadratic,rational_quadratic_tv,gaussian,gaussian_tv};
+mod types;
 mod helper;
+
+pub use kernel::{rational_quadratic,rational_quadratic_tv,gaussian,gaussian_tv};
+pub use types::{Settings,Filters,KernelFilter,Direction};
+pub use helper::{normalizer,rescale,rma_indicator};
+
+
+
+
+
+
+
 

@@ -1478,9 +1478,10 @@ checksum = "06f6b473c37f9add4cf1df5b4d66a8ef58ab6c895f1a3b3f949cf3e21230140e"
 
 [[package]]
 name = "tech_analysis"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "polars",
+ "rand",
 ]
 
 [[package]]

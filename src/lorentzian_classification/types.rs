@@ -9,13 +9,34 @@
  * @Description:
  */
 
+
 //! all type declared here using in lorentzian classification
+
+
+
+
+
+/// A trait for checking the configuration.
+///
+/// This trait provides a method for checking the configuration. The associated type `Output` represents
+/// the type of the output of the configuration check.
+pub trait ConfigCheck {
+    /// The type of the output of the configuration check.
+    type Output;
+
+    /// Checks the configuration.
+    ///
+    /// # Returns
+    ///
+    /// The result of the configuration check.
+    fn configuration_check(&self) -> Self::Output;
+}
 
 
 
 // settings
 /// Settings struct representing settings for a certain functionality for classification.
-# [derive(Debug)]
+# [derive(Debug,Clone,Copy,Eq, PartialEq)]
 pub struct Settings<'a>{
     /// The data source for the functionality.
     pub source:&'a str,
@@ -39,28 +60,27 @@ pub struct Settings<'a>{
 }
 // check setting params
 /// checking  Settings params validation
-impl<'a> Settings<'a> {
-    fn check_settings(&self) {
+impl ConfigCheck for Settings<'_>{
+    type Output = ();
+    fn configuration_check(&self) -> Self::Output {
         // Access each member to trigger compile-time checks
         let source  =  ["close","open","high","low","volume","vol"];
         assert!(source.contains(&self.source));
         if self.neighbors_count <= 0 {
-            panic!(" neighbors_count must be bigger than zero ")
+            panic!(" neighbors_count must be bigger than zero ");
         }
         if self.max_bars_back <= 0 {
-            panic!(" max_bars_back must be bigger than zero ")
+            panic!(" max_bars_back must be bigger than zero ");
         }
         if self.ema_period <= 1 {
-            panic!(" ema_period must be bigger than one ")
+            panic!(" ema_period must be bigger than one ");
         }
         if self.sma_period <= 1 {
-            panic!(" sma_period must be bigger than one ")
+            panic!(" sma_period must be bigger than one ");
         }
     }
+
 }
-
-// test for settings
-
 
 // filter setting
 /// a set of filters struct  used for classification.
@@ -77,8 +97,9 @@ pub struct Filters{
     pub adx_threshold: i32,
 }
 
-impl Filters {
-    fn check_filters(&self) {
+impl ConfigCheck for Filters {
+    type Output =();
+    fn configuration_check(&self)->Self::Output {
         // Access each member to trigger compile-time checks
         if !(self.regime_threshold >= -10.0 && self.regime_threshold <= 10.0) {
             panic!("regime_threshold must be between -10.0 and 10.0");
@@ -107,6 +128,27 @@ pub struct KernelFilter {
     pub crossover_lag: i32,
 }
 
+impl  ConfigCheck for KernelFilter{
+    
+    type Output = ();
+    fn configuration_check(&self) -> Self::Output {
+
+        if self.look_back_window < 0 {
+            panic!("look_back_window must be greater tha 0");
+        }
+        if self.relative_weight < 0.0 {
+            panic!("relative_weight must be greater tha 0");
+        }
+        if self.regression_level < 0.0 {
+            panic!("regression_level must be greater tha 0");
+        }
+        if self.crossover_lag < 0 {
+            panic!("regression_level must be greater tha 0");
+        }
+
+    }
+    
+}
 
 // market trend direction
 pub enum Direction{
@@ -115,8 +157,9 @@ pub enum Direction{
     NEUTRAL = 0,
 }
 
+// unit tes
 #[cfg(test)]
-mod test{
+mod tests {
     use super::*;
 
     #[test]
@@ -132,7 +175,7 @@ mod test{
             use_sma_filter: true,
             sma_period: 20,
         };
-        settings.check_settings();
+        settings.configuration_check();
     }
     #[test]
     fn test_filters() {
@@ -143,11 +186,11 @@ mod test{
             regime_threshold: 0.0,
             adx_threshold: 10,
         };
-        filters.check_filters();
+        filters.configuration_check();
     }
     #[test]
     fn test_kernel_filter(){
-        let _ = KernelFilter{
+        let kernel = KernelFilter{
             show_kernel_estimate: false,
             use_kernel_smoothing: false,
             look_back_window: 0,
@@ -155,11 +198,17 @@ mod test{
             regression_level: 0.0,
             crossover_lag: 0,
         };
+        kernel.configuration_check();
     }
     #[test]
     fn test_direction(){
         let _ = Direction::LONG;
         let _ = Direction::SHORT;
         let _ = Direction::NEUTRAL;
+    }
+
+    #[test]
+    fn test_finish(){
+        eprintln!("finished");
     }
 }

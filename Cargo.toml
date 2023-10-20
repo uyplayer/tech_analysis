@@ -20,4 +20,4 @@ path = "src/main.rs"
 
 [dependencies]
 polars = { version = "^0.32.1", features = ["lazy","describe"] }
-
+rand = "0.8.5"
