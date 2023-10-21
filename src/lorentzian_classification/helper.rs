@@ -94,33 +94,39 @@ pub  fn rescale<'a>(src: &'a Series, old_min: f64, old_max: f64, new_min: f64, n
 /// # Returns
 ///
 /// The series containing the EWMA values.
-pub fn rma_indicator(src: &Series, length: i32)->Result<Series, Box<dyn std::error::Error>> {
+pub fn rma_indicator<'a>(src: &'a Series, length: i32)->Result<Series, Box<dyn std::error::Error>> {
+    let duration = Duration::new(length.into());
+    let options = RollingOptionsImpl {
+        window_size: duration,
+        min_periods: 1,
+        weights: None,
+        center: false,
+        by: None,
+        tu: None,
+        tz: None,
+        closed_window: None,
+        fn_params: None,
+    };
+    let rolling_mean = src.rolling_mean(options)?;
 
-    let rolling = src.rolling_mean( length as usize)?;
-    let mut ewma: Vec<Option<f64>> = vec![];
-    let alpha = 2.0 / (length + 1) as f64;
+    let alpha = 2.0 / (length as f64 + 1.0);
+    let mut prev_ema: Option<f64> = None;
+    let mut ewma = Vec::new();
+    for opt in rolling_mean.f64()? {
+        let val = match opt {
+            Some(v) => v,
+            None => continue,
+        };
 
-    let mut prev_ema = None;
-    for opt in rolling.into_iter() {
-        if let Some(val) = opt {
-            match prev_ema {
-                Some(prev) => {
-                    let ema = alpha * val + (1.0 - alpha) * prev;
-                    ewma.push(Some(ema));
-                    prev_ema = Some(ema);
-                }
-                None => {
-                    ewma.push(Some(val));
-                    prev_ema = Some(val);
-                }
-            }
-        } else {
-            ewma.push(None);
-            prev_ema = None;
-        }
+        let ema = match prev_ema {
+            Some(prev) => alpha * val + (1.0 - alpha) * prev,
+            None => val,
+        };
+        ewma.push(ema);
+        prev_ema = Some(ema);
     }
-    Ok(Series::new("data", &ewma))
-
+    let ewm_series = Series::new("date", ewma);
+    Ok(ewm_series)
 }
 
 #[cfg(test)]
@@ -149,6 +155,18 @@ mod tests {
         let res  = rescale(&src, old_min, old_max, new_min, new_max)?;
         eprintln!("{:?}", res);
         Ok(())
+    }
+
+    #[test]
+    fn test_rma_indicator()->Result<(), Box<dyn std::error::Error>>{
+
+        let mut rng = rand::thread_rng();
+        let random_data: Vec<f64> = (0..1000).map(|_| rng.gen_range(1.0..2000.0)).collect();
+        let src =  Series::new("data", random_data);
+        let res = rma_indicator(&src,10)?;
+        eprintln!("{:?}", res);
+        Ok(())
+
     }
 
 }

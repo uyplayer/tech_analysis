@@ -19,5 +19,5 @@ name = "tech_analysis"
 path = "src/main.rs"
 
 [dependencies]
-polars = { version = "^0.32.1", features = ["lazy","describe"] }
+polars = { version = "^0.32.1", features = ["lazy","describe","rolling_window"] }
 rand = "0.8.5"
